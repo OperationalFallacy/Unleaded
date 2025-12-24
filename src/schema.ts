@@ -1,4 +1,4 @@
-import { Schema as S } from 'effect';
+import { Schema as S } from "effect";
 
 export const Location = S.Tuple(S.Number, S.Number);
 
@@ -10,17 +10,17 @@ export const Vehicle = S.Struct({
   doors: S.Number,
   drivetrain: S.String,
   engine: S.optional(S.String),
-  exteriorColor: S.String,
+  exteriorColor: S.optional(S.String),
   interiorColor: S.optional(S.String),
   fuel: S.String,
   make: S.String,
   model: S.String,
-  seats: S.Number,
+  seats: S.optional(S.Number),
   series: S.optional(S.String),
   squishVin: S.String,
   style: S.optional(S.String),
   transmission: S.optional(S.String),
-  trim: S.optional(S.String),
+  trim: S.optional(S.Union(S.String, S.Number)),
   type: S.optional(S.String),
   vin: S.optional(S.String),
   year: S.Number,
@@ -29,15 +29,15 @@ export const Vehicle = S.Struct({
 export const RetailListing = S.Struct({
   carfaxUrl: S.String,
   city: S.String,
-  cpo: S.Boolean,
+  cpo: S.optional(S.Boolean),
   dealer: S.String,
   photoCount: S.Number,
   price: S.Number,
   primaryImage: S.String,
   state: S.String,
-  used: S.Boolean,
+  used: S.optional(S.Boolean),
   vdp: S.String,
-  zip: S.String,
+  zip: S.optional(S.String),
   miles: S.optional(S.Number),
 });
 
@@ -51,15 +51,15 @@ export const History = S.Struct({
 });
 
 export const AutoDevListing = S.Struct({
-  '@id': S.String,
-  'vin': S.String,
-  'createdAt': S.String,
-  'location': Location,
-  'online': S.Boolean,
-  'vehicle': Vehicle,
-  'wholesaleListing': S.Null,
-  'retailListing': RetailListing,
-  'history': S.NullOr(History),
+  "@id": S.String,
+  vin: S.String,
+  createdAt: S.String,
+  location: Location,
+  online: S.Boolean,
+  vehicle: Vehicle,
+  wholesaleListing: S.Null,
+  retailListing: RetailListing,
+  history: S.NullOr(History),
 });
 
 export type AutoDevListing = S.Schema.Type<typeof AutoDevListing>;

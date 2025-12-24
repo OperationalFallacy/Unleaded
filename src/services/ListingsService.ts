@@ -1,95 +1,69 @@
-import { KeyValueStore } from '@effect/platform';
-import { NodeKeyValueStore } from '@effect/platform-node';
-import { Effect, Schema as S, Config, Option, pipe } from 'effect';
+import { HttpClient, HttpClientRequest, HttpClientResponse, KeyValueStore, UrlParams } from '@effect/platform';
+import { NodeHttpClient, NodeKeyValueStore } from '@effect/platform-node';
+import { Effect, Schema as S, Config, Option, Array as Arr, pipe } from 'effect';
 import { AutoDevListing, ApiResponse, CachedListings } from '../schema.js';
+
+export interface SearchParams {
+  zip: string;
+  distance: number;
+  engine: string;
+  brand?: string;
+  model?: string;
+}
 
 const BASE_URL = 'https://api.auto.dev/listings';
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
-const buildUrl = (zip: string) =>
-  `${BASE_URL}?${new URLSearchParams({
-    'vehicle.make': 'Hyundai',
-    'vehicle.model': 'Ioniq 5',
-    'retailListing.miles': '0-25100',
-    zip,
-    'limit': '1000',
-    'distance': '170',
-  }).toString()}`;
+const ValidCache = CachedListings.pipe(
+  S.filter((c) => Date.now() - c.timestamp < CACHE_TTL_MS)
+);
 
-const isCacheValid = (cached: CachedListings) =>
-  Date.now() - cached.timestamp < CACHE_TTL_MS;
+const toCacheKey = ({ zip, distance, engine, brand, model }: SearchParams) =>
+  pipe(
+    ["listings", zip, String(distance), engine, brand, model],
+    Arr.map(Option.fromNullable),
+    Arr.map(Option.getOrElse(() => "any")),
+    Arr.join("_"),
+  );
 
 export class ListingsService extends Effect.Service<ListingsService>()(
   'ListingsService',
   {
-    effect: Effect.gen(function* () {
-      const apiKey = yield* Config.string('AUTO_DEV_API_KEY');
-      const kv = yield* KeyValueStore.KeyValueStore;
-
-      const fetchFromApi = (zip: string) =>
-        pipe(
-          Effect.tryPromise(() =>
-            fetch(buildUrl(zip), {
-              headers: { Authorization: `Bearer ${apiKey}` },
-            }),
+    effect: Effect.all([
+      Config.string('AUTO_DEV_API_KEY'),
+      KeyValueStore.KeyValueStore,
+      HttpClient.HttpClient,
+    ]).pipe(
+      Effect.map(([apiKey, kv, http]) => ({
+        fetch: (params: SearchParams): Effect.Effect<readonly AutoDevListing[], Error> =>
+          kv.get(toCacheKey(params)).pipe(
+            Effect.map(Option.getOrThrow),
+            Effect.flatMap((data) => S.decodeUnknown(ValidCache)(JSON.parse(data))),
+            Effect.map((c) => c.listings),
+            Effect.orElse(() =>
+              HttpClientRequest.get(BASE_URL).pipe(
+                HttpClientRequest.setUrlParams(UrlParams.fromInput({
+                  zip: params.zip,
+                  limit: '1000',
+                  distance: String(params.distance),
+                  'retailListing.miles': '0-25100',
+                  'vehicle.engine': params.engine,
+                  ...(params.brand && { 'vehicle.make': params.brand }),
+                  ...(params.model && { 'vehicle.model': params.model }),
+                })),
+                HttpClientRequest.bearerToken(apiKey),
+                http.execute,
+                Effect.flatMap(HttpClientResponse.schemaBodyJson(ApiResponse)),
+                Effect.map((r) => r.data),
+                Effect.flatMap((listings) =>
+                  kv.set(toCacheKey(params), JSON.stringify({ timestamp: Date.now(), listings: [...listings] }))
+                    .pipe(Effect.map(() => listings))
+                ),
+              )
+            ),
           ),
-          Effect.filterOrFail(
-            (r) => r.ok,
-            (r) => new Error(`HTTP ${r.status}`),
-          ),
-          Effect.flatMap((res) => Effect.tryPromise(() => res.json())),
-          Effect.flatMap(S.decodeUnknown(ApiResponse)),
-          Effect.map((r) => r.data),
-        );
-
-      const getCacheKey = (zip: string) => `listings_${zip}`;
-
-      const getFromCache = (zip: string) =>
-        pipe(
-          kv.get(getCacheKey(zip)),
-          Effect.flatMap(
-            Option.match({
-              onNone: () => Effect.fail(new Error('cache miss')),
-              onSome: (data) =>
-                S.decodeUnknown(CachedListings)(JSON.parse(data)),
-            }),
-          ),
-        );
-
-      const saveToCache = (zip: string, listings: readonly AutoDevListing[]) =>
-        kv.set(
-          getCacheKey(zip),
-          JSON.stringify({
-            timestamp: Date.now(),
-            listings: [...listings],
-          }),
-        );
-
-      const fetchAndCache = (zip: string) =>
-        pipe(
-          fetchFromApi(zip),
-          Effect.tap((listings) => saveToCache(zip, listings)),
-        );
-
-      const fetch_ = (
-        zip: string,
-      ): Effect.Effect<readonly AutoDevListing[], Error> =>
-        pipe(
-          Effect.option(getFromCache(zip)),
-          Effect.flatMap(
-            Option.match({
-              onNone: () => fetchAndCache(zip),
-              onSome: (cached) =>
-                Effect.if(isCacheValid(cached), {
-                  onTrue: () => Effect.succeed(cached.listings),
-                  onFalse: () => fetchAndCache(zip),
-                }),
-            }),
-          ),
-        );
-
-      return { fetch: fetch_ };
-    }),
-    dependencies: [NodeKeyValueStore.layerFileSystem('./cache')],
+      })),
+    ),
+    dependencies: [NodeKeyValueStore.layerFileSystem('./cache'), NodeHttpClient.layer],
   },
 ) {}

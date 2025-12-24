@@ -81,12 +81,18 @@ const ListingRow: React.FC<{ listing: AutoDevListing }> = ({ listing }) => {
       <Box width={6}>
         <Text>{listing.vehicle.year}</Text>
       </Box>
-    <Box width={14}>
-      <Text>{listing.vehicle.trim ?? ""}</Text>
-    </Box>
-    <Box width={14}>
-      <Text>{listing.vehicle.exteriorColor}</Text>
-    </Box>
+      <Box width={10}>
+        <Text>{truncate(listing.vehicle.make, 10)}</Text>
+      </Box>
+      <Box width={12}>
+        <Text>{truncate(listing.vehicle.model, 12)}</Text>
+      </Box>
+      <Box width={14}>
+        <Text>{truncate(String(listing.vehicle.trim ?? ""), 14)}</Text>
+      </Box>
+      <Box width={8}>
+        <Text>{truncate(listing.vehicle.exteriorColor ?? "", 8)}</Text>
+      </Box>
       <Box width={8}>
         <Text>{listing.retailListing.miles ?? "?"}</Text>
       </Box>
@@ -96,29 +102,29 @@ const ListingRow: React.FC<{ listing: AutoDevListing }> = ({ listing }) => {
       <Box width={4}>
         <Text>{listing.history?.ownerCount ?? "?"}</Text>
       </Box>
-    <Box width={6}>
-      <Text>{cpoLabel}</Text>
-    </Box>
-    <Box width={10}>
-      <Text color="green">${listing.retailListing.price}</Text>
-    </Box>
-    <Box width={24}>
-      <Text>{truncate(locationText, 24)}</Text>
-    </Box>
-    <Box width={33}>
-      <Text>{truncate(listing.retailListing.dealer, 33)}</Text>
-    </Box>
-    <Box width={14}>
-      <Text dimColor>
-        {formatDistanceToNowStrict(created, { addSuffix: true })}
-      </Text>
-    </Box>
-    <Box width={18}>
-      <Text>
-        {link(listing.retailListing.carfaxUrl, "carfax")}{" "}
-        {link(listing.retailListing.primaryImage, "image")}
-      </Text>
-    </Box>
+      <Box width={6}>
+        <Text>{cpoLabel}</Text>
+      </Box>
+      <Box width={10}>
+        <Text color="green">${listing.retailListing.price}</Text>
+      </Box>
+      <Box width={20}>
+        <Text>{truncate(locationText, 20)}</Text>
+      </Box>
+      <Box width={24}>
+        <Text>{truncate(listing.retailListing.dealer, 24)}</Text>
+      </Box>
+      <Box width={14}>
+        <Text dimColor>
+          {formatDistanceToNowStrict(created, { addSuffix: true })}
+        </Text>
+      </Box>
+      <Box width={18}>
+        <Text>
+          {link(listing.retailListing.carfaxUrl, "carfax")}{" "}
+          {link(listing.retailListing.primaryImage, "image")}
+        </Text>
+      </Box>
     </Box>
   );
 };
@@ -128,10 +134,16 @@ const TableHeader: React.FC = () => (
     <Box width={6}>
       <Text bold>Year</Text>
     </Box>
+    <Box width={10}>
+      <Text bold>Make</Text>
+    </Box>
+    <Box width={12}>
+      <Text bold>Model</Text>
+    </Box>
     <Box width={14}>
       <Text bold>Trim</Text>
     </Box>
-    <Box width={14}>
+    <Box width={8}>
       <Text bold>Color</Text>
     </Box>
     <Box width={8}>
@@ -149,10 +161,10 @@ const TableHeader: React.FC = () => (
     <Box width={10}>
       <Text bold>Price</Text>
     </Box>
-    <Box width={24}>
+    <Box width={20}>
       <Text bold>Location</Text>
     </Box>
-    <Box width={33}>
+    <Box width={24}>
       <Text bold>Dealer</Text>
     </Box>
     <Box width={14}>

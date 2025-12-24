@@ -419,6 +419,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@effect/cli@npm:^0.73.0":
+  version: 0.73.0
+  resolution: "@effect/cli@npm:0.73.0"
+  dependencies:
+    ini: "npm:^4.1.3"
+    toml: "npm:^3.0.0"
+    yaml: "npm:^2.5.0"
+  peerDependencies:
+    "@effect/platform": ^0.94.0
+    "@effect/printer": ^0.47.0
+    "@effect/printer-ansi": ^0.47.0
+    effect: ^3.19.13
+  checksum: 10c0/f97684b51be807cdc049c7204f430f7e1b674231eee339eebe62649e4b09dfe1f325153628f283c35f2a33fe06dbe43ff6a84c2f171cd4e636eefba52dc576ff
+  languageName: node
+  linkType: hard
+
 "@effect/cluster@npm:^0.56.0":
   version: 0.56.0
   resolution: "@effect/cluster@npm:0.56.0"
@@ -510,6 +526,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@effect/printer-ansi@npm:^0.47.0":
+  version: 0.47.0
+  resolution: "@effect/printer-ansi@npm:0.47.0"
+  dependencies:
+    "@effect/printer": "npm:^0.47.0"
+  peerDependencies:
+    "@effect/typeclass": ^0.38.0
+    effect: ^3.19.0
+  checksum: 10c0/6b44f09da090f4250f4eb3bface5f644d7ea9e3fe5ceea5af517543846c1e2486ef6117df176848fea64408415c92900bdc522ec1d1c5da2323665c1cb920b3f
+  languageName: node
+  linkType: hard
+
+"@effect/printer@npm:^0.47.0":
+  version: 0.47.0
+  resolution: "@effect/printer@npm:0.47.0"
+  peerDependencies:
+    "@effect/typeclass": ^0.38.0
+    effect: ^3.19.0
+  checksum: 10c0/279f70dc709d88dd339c66e603f1263e0e560cbd96351a19b5368edb082e95d948c4dfea3d97d97d51215bc2b2254772e5cde8801ae05fe498a4bc0601d1a996
+  languageName: node
+  linkType: hard
+
 "@effect/rpc@npm:^0.73.0":
   version: 0.73.0
   resolution: "@effect/rpc@npm:0.73.0"
@@ -532,6 +570,15 @@ __metadata:
     "@effect/platform": ^0.94.0
     effect: ^3.19.13
   checksum: 10c0/ba3d283c157a700cdfc4eb01a81fcebb2f4d8c355a80f7d20339f46d4f75bf3930467c2da5da81970da7c0a2766adc82df34c7888c67a63583b6af5c567b950c
+  languageName: node
+  linkType: hard
+
+"@effect/typeclass@npm:^0.38.0":
+  version: 0.38.0
+  resolution: "@effect/typeclass@npm:0.38.0"
+  peerDependencies:
+    effect: ^3.19.0
+  checksum: 10c0/35cf6af14000f7953f19a6f368228f704011642f83f4559e4666ac30b1a3fdab8022fade2de70df948eee60c2e61b38e15c00d0f169990c2e9e1e4bf789503ac
   languageName: node
   linkType: hard
 
@@ -1888,13 +1935,17 @@ __metadata:
   resolution: "Unleaded@workspace:."
   dependencies:
     "@effect-atom/atom": "npm:^0.4.11"
+    "@effect/cli": "npm:^0.73.0"
     "@effect/cluster": "npm:^0.56.0"
     "@effect/experimental": "npm:^0.58.0"
     "@effect/language-service": "npm:^0.62.5"
     "@effect/platform": "npm:^0.94.0"
     "@effect/platform-node": "npm:^0.104.0"
+    "@effect/printer": "npm:^0.47.0"
+    "@effect/printer-ansi": "npm:^0.47.0"
     "@effect/rpc": "npm:^0.73.0"
     "@effect/sql": "npm:^0.49.0"
+    "@effect/typeclass": "npm:^0.38.0"
     "@effect/workflow": "npm:^0.16.0"
     "@stylistic/eslint-plugin": "npm:^2"
     "@types/jest": "npm:^30.0.0"
@@ -3946,6 +3997,13 @@ __metadata:
   version: 2.0.0
   resolution: "ini@npm:2.0.0"
   checksum: 10c0/2e0c8f386369139029da87819438b20a1ff3fe58372d93fb1a86e9d9344125ace3a806b8ec4eb160a46e64cbc422fe68251869441676af49b7fc441af2389c25
+  languageName: node
+  linkType: hard
+
+"ini@npm:^4.1.3":
+  version: 4.1.3
+  resolution: "ini@npm:4.1.3"
+  checksum: 10c0/0d27eff094d5f3899dd7c00d0c04ea733ca03a8eb6f9406ce15daac1a81de022cb417d6eaff7e4342451ffa663389c565ffc68d6825eaf686bf003280b945764
   languageName: node
   linkType: hard
 
@@ -6595,6 +6653,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"toml@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "toml@npm:3.0.0"
+  checksum: 10c0/8d7ed3e700ca602e5419fca343e1c595eb7aa177745141f0761a5b20874b58ee5c878cd045c408da9d130cb2b611c639912210ba96ce2f78e443569aa8060c18
+  languageName: node
+  linkType: hard
+
 "ts-api-utils@npm:^2.1.0":
   version: 2.1.0
   resolution: "ts-api-utils@npm:2.1.0"
@@ -7221,7 +7286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.2.2":
+"yaml@npm:^2.2.2, yaml@npm:^2.5.0":
   version: 2.8.2
   resolution: "yaml@npm:2.8.2"
   bin:

@@ -170,7 +170,7 @@
           "exec": "yarn install"
         },
         {
-          "exec": "yarn up @stylistic/eslint-plugin @types/jest @types/node @types/react @typescript-eslint/eslint-plugin @typescript-eslint/parser constructs eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript @effect-atom/atom @effect/cluster @effect/experimental @effect/language-service @effect/platform-node @effect/platform @effect/rpc @effect/sql @effect/workflow cli-table3 date-fns effect ink react"
+          "exec": "yarn up @stylistic/eslint-plugin @types/jest @types/node @types/react @typescript-eslint/eslint-plugin @typescript-eslint/parser constructs eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript @effect-atom/atom @effect/cli @effect/cluster @effect/experimental @effect/language-service @effect/platform-node @effect/platform @effect/printer-ansi @effect/printer @effect/rpc @effect/sql @effect/typeclass @effect/workflow cli-table3 date-fns effect ink react"
         },
         {
           "exec": "npx projen"
