@@ -16,7 +16,7 @@ Interactive, instant sorting by various parameters (price, cpo flag etc). Basic 
 
 Clicable links to the car image and carfax reports.
 
-[!view](./media/unleaded.gif)
+![link](./media/unleaded.gif)
 
 # Tech stack
 
