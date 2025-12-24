@@ -40,6 +40,7 @@ const matchesSearch =
     return (l: AutoDevListing): boolean =>
       [
         l.vehicle.trim,
+        String(l.vehicle.model ?? ""),
         l.vehicle.exteriorColor,
         l.retailListing.city,
         l.retailListing.dealer,
@@ -55,11 +56,13 @@ export const filterListings = (
   listings: readonly AutoDevListing[],
   search: string,
   cpoOnly: boolean,
+  modelFilter: string | null,
 ): readonly AutoDevListing[] =>
   pipe(
     listings,
     A.filter((l) => search.length === 0 || matchesSearch(search)(l)),
     A.filter(matchesCpo(cpoOnly)),
+    A.filter((l) => !modelFilter || String(l.vehicle.model) === modelFilter),
   );
 
 const applyDirection = (

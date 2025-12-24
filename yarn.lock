@@ -407,7 +407,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@effect-atom/atom@npm:^0.4.11":
+"@effect-atom/atom-react@npm:^0.4.4":
+  version: 0.4.4
+  resolution: "@effect-atom/atom-react@npm:0.4.4"
+  dependencies:
+    "@effect-atom/atom": "npm:^0.4.10"
+  peerDependencies:
+    effect: ^3.19
+    react: ">=18 <20"
+    scheduler: "*"
+  checksum: 10c0/7205f896a73a737956bea963a0b80044616f10bb92a95d4aed6e3e6a27c868f89263b39c3363c7177abace554231e531b9a10cb1779cb5abc665c1209874494a
+  languageName: node
+  linkType: hard
+
+"@effect-atom/atom@npm:^0.4.10, @effect-atom/atom@npm:^0.4.11":
   version: 0.4.11
   resolution: "@effect-atom/atom@npm:0.4.11"
   peerDependencies:
@@ -1935,6 +1948,7 @@ __metadata:
   resolution: "Unleaded@workspace:."
   dependencies:
     "@effect-atom/atom": "npm:^0.4.11"
+    "@effect-atom/atom-react": "npm:^0.4.4"
     "@effect/cli": "npm:^0.73.0"
     "@effect/cluster": "npm:^0.56.0"
     "@effect/experimental": "npm:^0.58.0"
@@ -1961,6 +1975,7 @@ __metadata:
     eslint-import-resolver-typescript: "npm:^4.4.4"
     eslint-plugin-import: "npm:^2.32.0"
     ink: "npm:^6.6.0"
+    ink-select-input: "npm:^5.0.0"
     jest: "npm:^30.2.0"
     jest-junit: "npm:^16"
     projen: "npm:^0.98.30"
@@ -2109,6 +2124,13 @@ __metadata:
   version: 2.0.1
   resolution: "argparse@npm:2.0.1"
   checksum: 10c0/c5640c2d89045371c7cedd6a70212a04e360fd34d6edeae32f6952c63949e3525ea77dbec0289d8213a99bbaeab5abfa860b5c12cf88a2e6cf8106e90dd27a7e
+  languageName: node
+  linkType: hard
+
+"arr-rotate@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "arr-rotate@npm:1.0.0"
+  checksum: 10c0/f0fe35c373c10b9140e0ac4f8a8194904c7ec2bd7919c1cf713941af994450750afb66c8f001113023fcb4fcf5ff7591e88f6286bd4bcc500bc622f9d740d6e3
   languageName: node
   linkType: hard
 
@@ -3104,6 +3126,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"escape-string-regexp@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "escape-string-regexp@npm:5.0.0"
+  checksum: 10c0/6366f474c6f37a802800a435232395e04e9885919873e382b157ab7e8f0feb8fed71497f84a6f6a81a49aab41815522f5839112bd38026d203aea0c91622df95
+  languageName: node
+  linkType: hard
+
 "eslint-import-context@npm:^0.1.8":
   version: 0.1.9
   resolution: "eslint-import-context@npm:0.1.9"
@@ -3458,6 +3487,16 @@ __metadata:
     picomatch:
       optional: true
   checksum: 10c0/e345083c4306b3aed6cb8ec551e26c36bab5c511e99ea4576a16750ddc8d3240e63826cc624f5ae17ad4dc82e68a253213b60d556c11bfad064b7607847ed07f
+  languageName: node
+  linkType: hard
+
+"figures@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "figures@npm:5.0.0"
+  dependencies:
+    escape-string-regexp: "npm:^5.0.0"
+    is-unicode-supported: "npm:^1.2.0"
+  checksum: 10c0/ce0f17d4ea8b0fc429c5207c343534a2f5284ecfb22aa08607da7dc84ed9e1cf754f5b97760e8dcb98d3c9d1a1e4d3d578fe3b5b99c426f05d0f06c7ba618e16
   languageName: node
   linkType: hard
 
@@ -4007,6 +4046,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ink-select-input@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "ink-select-input@npm:5.0.0"
+  dependencies:
+    arr-rotate: "npm:^1.0.0"
+    figures: "npm:^5.0.0"
+    lodash.isequal: "npm:^4.5.0"
+  peerDependencies:
+    ink: ^4.0.0
+    react: ^18.0.0
+  checksum: 10c0/2633d4accc0b91cfe9cc7171724b2355992c28e673c156d12bcb77fc629d9fd0d5616036c944af24b130c354c356152beacc06091c26409d347a0845a29fdfc7
+  languageName: node
+  linkType: hard
+
 "ink@npm:^6.6.0":
   version: 6.6.0
   resolution: "ink@npm:6.6.0"
@@ -4338,6 +4391,13 @@ __metadata:
   dependencies:
     which-typed-array: "npm:^1.1.16"
   checksum: 10c0/415511da3669e36e002820584e264997ffe277ff136643a3126cc949197e6ca3334d0f12d084e83b1994af2e9c8141275c741cf2b7da5a2ff62dd0cac26f76c4
+  languageName: node
+  linkType: hard
+
+"is-unicode-supported@npm:^1.2.0":
+  version: 1.3.0
+  resolution: "is-unicode-supported@npm:1.3.0"
+  checksum: 10c0/b8674ea95d869f6faabddc6a484767207058b91aea0250803cbf1221345cb0c56f466d4ecea375dc77f6633d248d33c47bd296fb8f4cdba0b4edba8917e83d8a
   languageName: node
   linkType: hard
 
@@ -5078,6 +5138,13 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10c0/d3972ab70dfe58ce620e64265f90162d247e87159b6126b01314dd67be43d50e96a50b517bce2d9452a79409c7614054c277b5232377de50416564a77ac7aad3
+  languageName: node
+  linkType: hard
+
+"lodash.isequal@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.isequal@npm:4.5.0"
+  checksum: 10c0/dfdb2356db19631a4b445d5f37868a095e2402292d59539a987f134a8778c62a2810c2452d11ae9e6dcac71fc9de40a6fedcb20e2952a15b431ad8b29e50e28f
   languageName: node
   linkType: hard
 

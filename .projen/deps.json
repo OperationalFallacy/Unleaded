@@ -72,6 +72,11 @@
       "type": "build"
     },
     {
+      "name": "@effect-atom/atom-react",
+      "version": "^0.4.4",
+      "type": "runtime"
+    },
+    {
       "name": "@effect-atom/atom",
       "version": "^0.4.11",
       "type": "runtime"
@@ -149,6 +154,11 @@
     {
       "name": "effect",
       "version": "^3.19.13",
+      "type": "runtime"
+    },
+    {
+      "name": "ink-select-input",
+      "version": "^5.0.0",
       "type": "runtime"
     },
     {

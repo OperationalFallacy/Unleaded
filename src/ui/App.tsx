@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { render, Box, Text, useInput, useApp } from "ink";
 import { formatDistanceToNowStrict } from "date-fns";
 import type { AutoDevListing } from "../schema.js";
 import type { SortKey, SortDir } from "../domain/sorting.js";
 import { filterListings, sortListings } from "../domain/sorting.js";
+import SelectInput from "ink-select-input";
 
 interface AppState {
   listings: readonly AutoDevListing[];
@@ -13,6 +14,8 @@ interface AppState {
   page: number;
   pageSize: number;
   cpoOnly: boolean;
+  modelFilter: string | null;
+  modelSelectMode: boolean;
 }
 
 const initialState: AppState = {
@@ -23,6 +26,8 @@ const initialState: AppState = {
   page: 0,
   pageSize: 15,
   cpoOnly: false,
+  modelFilter: null,
+  modelSelectMode: false,
 };
 
 const link = (url: string, text: string) =>
@@ -54,9 +59,11 @@ const Header: React.FC<{
   total: number;
   pageSize: number;
   cpoOnly: boolean;
-}> = ({ sortKey, sortDir, search, page, total, pageSize, cpoOnly }) => {
+  modelFilter: string | null;
+}> = ({ sortKey, sortDir, search, page, total, pageSize, cpoOnly, modelFilter }) => {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const cpoStatus = cpoFilterLabels[Number(cpoOnly)];
+  const modelLabel = modelFilter ?? "all";
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Text bold color="cyan">
@@ -64,10 +71,10 @@ const Header: React.FC<{
         {page + 1}/{totalPages} | {total} results
       </Text>
       <Text dimColor>
-        [p]rice [m]iles [y]ear [l]isted | [/]search [c]lear | [o]CPO | [n]ext [b]ack | [r]everse |
-        [q]uit
+        [p]rice [m]iles [y]ear [l]isted | [/]search [c]lear | [o]CPO | [f]ilter model [x]clear model | [n]ext [b]ack | [r]everse | [q]uit
       </Text>
       {search.length > 0 && <Text color="yellow">Filter: {search}</Text>}
+      <Text color="magenta">Model: {modelLabel}</Text>
     </Box>
   );
 };
@@ -85,7 +92,7 @@ const ListingRow: React.FC<{ listing: AutoDevListing }> = ({ listing }) => {
         <Text>{truncate(listing.vehicle.make, 10)}</Text>
       </Box>
       <Box width={12}>
-        <Text>{truncate(listing.vehicle.model, 12)}</Text>
+        <Text>{truncate(String(listing.vehicle.model), 12)}</Text>
       </Box>
       <Box width={14}>
         <Text>{truncate(String(listing.vehicle.trim ?? ""), 14)}</Text>
@@ -200,8 +207,36 @@ export const App: React.FC<{ initialListings: readonly AutoDevListing[] }> = ({
   });
   const [searchMode, setSearchMode] = useState(false);
   const [searchInput, setSearchInput] = useState("");
+  const [modelSelectMode, setModelSelectMode] = useState(false);
 
-  const filtered = filterListings(state.listings, state.search, state.cpoOnly);
+  const models = useMemo(() => {
+    const uniq = new Set<string>();
+    for (const listing of state.listings) {
+      if (listing.vehicle.model !== undefined && listing.vehicle.model !== null) {
+        uniq.add(String(listing.vehicle.model));
+      }
+    }
+    return Array.from(uniq).sort();
+  }, [state.listings]);
+
+  const modelItems = useMemo(
+    () => [
+      { label: "All models", value: null },
+      ...models.map((model) => ({ label: model, value: model })),
+    ],
+    [models]
+  );
+  const handleModelSelect = (item: { label: string; value: string | null }) => {
+    setState((s) => ({ ...s, modelFilter: item.value, page: 0 }));
+    setModelSelectMode(false);
+  };
+
+  const filtered = filterListings(
+    state.listings,
+    state.search,
+    state.cpoOnly,
+    state.modelFilter
+  );
   const sorted = sortListings(filtered, state.sortKey, state.sortDir);
   const pageStart = state.page * state.pageSize;
   const pageEnd = pageStart + state.pageSize;
@@ -233,6 +268,14 @@ export const App: React.FC<{ initialListings: readonly AutoDevListing[] }> = ({
       exit();
       return;
     }
+    if (input === "f") {
+      setModelSelectMode(true);
+      return;
+    }
+    if (input === "x") {
+      setState((s) => ({ ...s, modelFilter: null, page: 0 }));
+      return;
+    }
     if (input === "/") {
       setSearchMode(true);
       setSearchInput(state.search);
@@ -245,6 +288,12 @@ export const App: React.FC<{ initialListings: readonly AutoDevListing[] }> = ({
   };
 
   useInput((input, key) => {
+    if (modelSelectMode) {
+      if (key.escape) {
+        setModelSelectMode(false);
+      }
+      return;
+    }
     if (searchMode) {
       handleSearchInput(input, key);
       return;
@@ -262,7 +311,14 @@ export const App: React.FC<{ initialListings: readonly AutoDevListing[] }> = ({
         total={sorted.length}
         pageSize={state.pageSize}
         cpoOnly={state.cpoOnly}
+        modelFilter={state.modelFilter}
       />
+      {modelSelectMode && (
+        <Box marginBottom={1} flexDirection="column">
+          <Text color="yellow">Select model (Enter to apply, Esc to cancel)</Text>
+          <SelectInput items={modelItems} onSelect={handleModelSelect} />
+        </Box>
+      )}
       {searchMode && (
         <Box marginBottom={1}>
           <Text color="yellow">Search: {searchInput}█</Text>
