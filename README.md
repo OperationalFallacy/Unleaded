@@ -7,6 +7,7 @@ AUTO_DEV_API_KEY=xxx npx tsx main.tsx -z <zip> [-b <brand>] [-m <model>] [-d <di
 ```
 
 Options:
+
 - `-z, --zip` - Zip code for search location (required)
 - `-b, --brand` - Brand/make name (e.g., Hyundai, Tesla)
 - `-m, --model` - Model name (e.g., Ioniq 5, Model 3)
@@ -17,15 +18,43 @@ Use `--wizard` for interactive mode or `--help` for full usage info.
 
 # Requirements
 
-Using `api.auto.dev` API, register and get api key to use this cli. auto.dev provides enough free searches per month to find a good deal.
+Using `api.auto.dev` API, register an account and get API key to use with this cli.
+
+auto.dev provides enough free searches per month to find a good deal.
+
+To start, run `yarn install`
+
+# How to use
+
+Unleaded cli provides market snapshot.
+
+![](./media/controls.png)
+
+It loads vehicle listings for a car maker, zip and desired distance. Use fast cli to sort and filter listing to find cars in the desired price range and location.
+
+If something looks good, click on carfax link to check the history. There is also a link to Google search for Vin number. Google usually points to the dealership listing on first result or second result.
+
+Call sales and negotiate :)
+
+# Build
+
+To make it start faster:
+
+`npx projen build`
+
+`AUTO_DEV_API_KEY=hey node lib/src/main.js`
 
 # Features
 
-Caches content to re-use data.
+Caches all content in ./cache dir to re-use data.
 
 Interactive, instant sorting by various parameters (price, cpo flag etc). Basic search to find dealer names.
 
-Clicable links to the car image and carfax reports.
+Filter by model name, and CPO (manufacturer certified pre-owned) state.
+
+Clicable links to the car image, carfax report and vin search through Google
+
+Normalizes model names
 
 ![link](./media/unleaded.gif)
 

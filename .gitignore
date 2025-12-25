@@ -38,6 +38,7 @@ jspm_packages/
 .yarn-integrity
 .cache
 cache
+lib
 /test-reports/
 junit.xml
 /coverage/

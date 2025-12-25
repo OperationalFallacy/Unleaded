@@ -23,6 +23,7 @@
   },
   "author": {
     "name": "Roman Naumenko",
+    "url": "https://github.com/OperationalFallacy/Unleaded",
     "organization": false
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "effect": "^3.19.13",
     "ink": "^6.6.0",
     "ink-select-input": "^5.0.0",
+    "ink-spinner": "^5.0.0",
     "react": "^19.2.3"
   },
   "license": "Apache-2.0",

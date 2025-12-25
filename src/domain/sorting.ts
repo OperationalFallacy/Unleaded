@@ -4,9 +4,8 @@ import { AutoDevListing } from '../schema.js';
 export type SortKey = 'price' | 'miles' | 'year' | 'listed';
 export type SortDir = 'asc' | 'desc';
 
-const orderByPrice: Order.Order<AutoDevListing> = Order.mapInput(
-  Order.number,
-  (l: AutoDevListing) => l.retailListing.price,
+const orderByPrice: Order.Order<AutoDevListing> = Order.mapInput(Order.number, (l: AutoDevListing) =>
+  l.retailListing.price ?? Number.MAX_SAFE_INTEGER,
 );
 
 const orderByMiles: Order.Order<AutoDevListing> = Order.mapInput(
@@ -40,29 +39,31 @@ const matchesSearch =
     return (l: AutoDevListing): boolean =>
       [
         l.vehicle.trim,
-        String(l.vehicle.model ?? ""),
+        l.vehicle.model,
         l.vehicle.exteriorColor,
         l.retailListing.city,
         l.retailListing.dealer,
-      ].some((field) => field?.toLowerCase().includes(needle));
+      ].some((field) => String(field ?? '').toLowerCase().includes(needle));
   };
 
 const matchesCpo =
   (cpoOnly: boolean) =>
     (l: AutoDevListing): boolean =>
-      !cpoOnly || l.retailListing.cpo;
+      !cpoOnly || Boolean(l.retailListing.cpo);
 
 export const filterListings = (
   listings: readonly AutoDevListing[],
   search: string,
   cpoOnly: boolean,
   modelFilter: string | null,
+  yearFilter: number | null,
 ): readonly AutoDevListing[] =>
   pipe(
     listings,
     A.filter((l) => search.length === 0 || matchesSearch(search)(l)),
     A.filter(matchesCpo(cpoOnly)),
     A.filter((l) => !modelFilter || String(l.vehicle.model) === modelFilter),
+    A.filter((l) => !yearFilter || l.vehicle.year === yearFilter),
   );
 
 const applyDirection = (

@@ -1,48 +1,61 @@
-import React, { useMemo, useState } from "react";
-import { render, Box, Text, useInput, useApp } from "ink";
-import { formatDistanceToNowStrict } from "date-fns";
-import type { AutoDevListing } from "../schema.js";
-import type { SortKey, SortDir } from "../domain/sorting.js";
-import { filterListings, sortListings } from "../domain/sorting.js";
-import SelectInput from "ink-select-input";
-
-interface AppState {
-  listings: readonly AutoDevListing[];
-  search: string;
-  sortKey: SortKey;
-  sortDir: SortDir;
-  page: number;
-  pageSize: number;
-  cpoOnly: boolean;
-  modelFilter: string | null;
-  modelSelectMode: boolean;
-}
-
-const initialState: AppState = {
-  listings: [],
-  search: "",
-  sortKey: "price",
-  sortDir: "asc",
-  page: 0,
-  pageSize: 15,
-  cpoOnly: false,
-  modelFilter: null,
-  modelSelectMode: false,
-};
+import {
+  RegistryContext,
+  Registry,
+  useAtomSet,
+  useAtomValue,
+} from '@effect-atom/atom-react';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { Match } from 'effect';
+import { Box, Text, useApp, useInput, render, type Instance } from 'ink';
+import SelectInput from 'ink-select-input';
+import Spinner from 'ink-spinner';
+import React from 'react';
+import type { SortDir, SortKey } from '../domain/sorting.js';
+import type { AutoDevListing } from '../schema.js';
+import {
+  appendSearchCharAction,
+  applyModelFilterAction,
+  applyYearFilterAction,
+  cancelSearchAction,
+  clearModelFilterAction,
+  clearSearchAction,
+  clearYearFilterAction,
+  closeModelSelectAction,
+  closeYearSelectAction,
+  commitSearchAction,
+  deleteSearchCharAction,
+  headerAtom,
+  modelItemsAtom,
+  yearItemsAtom,
+  nextPageAction,
+  openModelSelectAction,
+  openYearSelectAction,
+  prevPageAction,
+  setSortKeyAction,
+  startSearchAction,
+  toggleCpoAction,
+  toggleSortDirAction,
+  visibleAtom,
+  loadingAtom,
+  loadedCountAtom,
+  loadingStatusAtom,
+  viewStateAtom,
+} from './atoms.js';
 
 const link = (url: string, text: string) =>
   process.stdout.isTTY
     ? `\x1b]8;;${url}\x07${text}\x1b]8;;\x07`
     : text;
 
-const flipDir = (dir: SortDir): SortDir => (dir === "asc" ? "desc" : "asc");
+const googleVinLink = (vin: string) =>
+  `https://www.google.com/search?q=${encodeURIComponent(vin)}`;
 
-const cpoFilterLabels = ["off", "on"] as const;
-const cpoValueLabels = ["No", "Yes"] as const;
+const cpoFilterLabels = ['off', 'on'] as const;
+const cpoValueLabels = ['No', 'Yes'] as const;
 
 const truncate = (value: string, width: number): string => {
   if (width <= 0) {
-    return "";
+    return '';
   }
   if (value.length <= width) {
     return value;
@@ -60,21 +73,23 @@ const Header: React.FC<{
   pageSize: number;
   cpoOnly: boolean;
   modelFilter: string | null;
-}> = ({ sortKey, sortDir, search, page, total, pageSize, cpoOnly, modelFilter }) => {
+  yearFilter: number | null;
+}> = ({ sortKey, sortDir, search, page, total, pageSize, cpoOnly, modelFilter, yearFilter }) => {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const cpoStatus = cpoFilterLabels[Number(cpoOnly)];
-  const modelLabel = modelFilter ?? "all";
+  const modelLabel = modelFilter ?? 'all';
+  const yearLabel = yearFilter ?? 'all';
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Text bold color="cyan">
-        Ioniq 5 Search | Sort: {sortKey} ({sortDir}) | CPO: {cpoStatus} | Page{" "}
+        EV Search | Sort: {sortKey} ({sortDir}) | CPO: {cpoStatus} | Page{' '}
         {page + 1}/{totalPages} | {total} results
       </Text>
       <Text dimColor>
-        [p]rice [m]iles [y]ear [l]isted | [/]search [c]lear | [o]CPO | [f]ilter model [x]clear model | [n]ext [b]ack | [r]everse | [q]uit
+        [p]rice [m]iles [y]ear [l]isted | [/]search [c]lear | [o]CPO | [f]model [F]year | [x]clear | [n]ext [b]ack | [r]everse | [q]uit
       </Text>
       {search.length > 0 && <Text color="yellow">Filter: {search}</Text>}
-      <Text color="magenta">Model: {modelLabel}</Text>
+      <Text color="magenta">Model: {modelLabel} | Year: {yearLabel}</Text>
     </Box>
   );
 };
@@ -83,6 +98,7 @@ const ListingRow: React.FC<{ listing: AutoDevListing }> = ({ listing }) => {
   const created = new Date(listing.createdAt);
   const cpoLabel = cpoValueLabels[Number(listing.retailListing.cpo)];
   const locationText = `${listing.retailListing.city}, ${listing.retailListing.state}`;
+  const vin = listing.vin;
   return (
     <Box>
       <Box width={6}>
@@ -95,19 +111,19 @@ const ListingRow: React.FC<{ listing: AutoDevListing }> = ({ listing }) => {
         <Text>{truncate(String(listing.vehicle.model), 12)}</Text>
       </Box>
       <Box width={14}>
-        <Text>{truncate(String(listing.vehicle.trim ?? ""), 14)}</Text>
+        <Text>{truncate(String(listing.vehicle.trim ?? ''), 14)}</Text>
       </Box>
       <Box width={8}>
-        <Text>{truncate(listing.vehicle.exteriorColor ?? "", 8)}</Text>
+        <Text>{truncate(listing.vehicle.exteriorColor ?? '', 8)}</Text>
       </Box>
       <Box width={8}>
-        <Text>{listing.retailListing.miles ?? "?"}</Text>
+        <Text>{listing.retailListing.miles ?? '?'}</Text>
       </Box>
       <Box width={4}>
-        <Text>{listing.history?.accidentCount ?? "?"}</Text>
+        <Text>{listing.history?.accidentCount ?? '?'}</Text>
       </Box>
       <Box width={4}>
-        <Text>{listing.history?.ownerCount ?? "?"}</Text>
+        <Text>{listing.history?.ownerCount ?? '?'}</Text>
       </Box>
       <Box width={6}>
         <Text>{cpoLabel}</Text>
@@ -126,10 +142,14 @@ const ListingRow: React.FC<{ listing: AutoDevListing }> = ({ listing }) => {
           {formatDistanceToNowStrict(created, { addSuffix: true })}
         </Text>
       </Box>
-      <Box width={18}>
+      <Box width={22}>
+        <Text>{truncate(vin, 22)}</Text>
+      </Box>
+      <Box width={24}>
         <Text>
-          {link(listing.retailListing.carfaxUrl, "carfax")}{" "}
-          {link(listing.retailListing.primaryImage, "image")}
+          {link(listing.retailListing.carfaxUrl, 'carfax')}{' '}
+          {link(listing.retailListing.primaryImage, 'image')}{' '}
+          {link(googleVinLink(vin), 'vin')}
         </Text>
       </Box>
     </Box>
@@ -178,145 +198,140 @@ const TableHeader: React.FC = () => (
       <Text bold>Listed</Text>
     </Box>
     <Box width={18}>
+      <Text bold>VIN</Text>
+    </Box>
+    <Box width={24}>
       <Text bold>Links</Text>
     </Box>
   </Box>
 );
 
-type InputAction = (s: AppState, totalPages: number) => AppState;
-
-const inputActions: Record<string, InputAction> = {
-  p: (s) => ({ ...s, sortKey: "price", page: 0 }),
-  m: (s) => ({ ...s, sortKey: "miles", page: 0 }),
-  y: (s) => ({ ...s, sortKey: "year", page: 0 }),
-  l: (s) => ({ ...s, sortKey: "listed", page: 0 }),
-  r: (s) => ({ ...s, sortDir: flipDir(s.sortDir) }),
-  n: (s, totalPages) => ({ ...s, page: Math.min(s.page + 1, totalPages - 1) }),
-  b: (s) => ({ ...s, page: Math.max(s.page - 1, 0) }),
-  c: (s) => ({ ...s, search: "", page: 0 }),
-  o: (s) => ({ ...s, cpoOnly: !s.cpoOnly, page: 0 }),
-};
-
-export const App: React.FC<{ initialListings: readonly AutoDevListing[] }> = ({
-  initialListings,
-}) => {
+export const App: React.FC = () => {
   const { exit } = useApp();
-  const [state, setState] = useState<AppState>({
-    ...initialState,
-    listings: initialListings,
-  });
-  const [searchMode, setSearchMode] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
-  const [modelSelectMode, setModelSelectMode] = useState(false);
+  const header = useAtomValue(headerAtom);
+  const visible = useAtomValue(visibleAtom);
+  const modelItems = useAtomValue(modelItemsAtom);
+  const yearItems = useAtomValue(yearItemsAtom);
+  const view = useAtomValue(viewStateAtom);
+  const searchMode = view.searchMode;
+  const searchInput = view.searchInput;
+  const modelSelectMode = view.modelSelectMode;
+  const yearSelectMode = view.yearSelectMode;
+  const loading = useAtomValue(loadingAtom);
+  const loadedCount = useAtomValue(loadedCountAtom);
+  const loadingStatus = useAtomValue(loadingStatusAtom);
 
-  const models = useMemo(() => {
-    const uniq = new Set<string>();
-    for (const listing of state.listings) {
-      if (listing.vehicle.model !== undefined && listing.vehicle.model !== null) {
-        uniq.add(String(listing.vehicle.model));
-      }
-    }
-    return Array.from(uniq).sort();
-  }, [state.listings]);
+  const setSortKey = useAtomSet(setSortKeyAction);
+  const toggleSortDir = useAtomSet(toggleSortDirAction);
+  const nextPage = useAtomSet(nextPageAction);
+  const prevPage = useAtomSet(prevPageAction);
+  const toggleCpo = useAtomSet(toggleCpoAction);
+  const clearSearch = useAtomSet(clearSearchAction);
+  const startSearch = useAtomSet(startSearchAction);
+  const cancelSearch = useAtomSet(cancelSearchAction);
+  const commitSearch = useAtomSet(commitSearchAction);
+  const appendSearchChar = useAtomSet(appendSearchCharAction);
+  const deleteSearchChar = useAtomSet(deleteSearchCharAction);
+  const openModelSelect = useAtomSet(openModelSelectAction);
+  const closeModelSelect = useAtomSet(closeModelSelectAction);
+  const applyModelFilter = useAtomSet(applyModelFilterAction);
+  const clearModelFilter = useAtomSet(clearModelFilterAction);
+  const openYearSelect = useAtomSet(openYearSelectAction);
+  const closeYearSelect = useAtomSet(closeYearSelectAction);
+  const applyYearFilter = useAtomSet(applyYearFilterAction);
+  const clearYearFilter = useAtomSet(clearYearFilterAction);
 
-  const modelItems = useMemo(
-    () => [
-      { label: "All models", value: null },
-      ...models.map((model) => ({ label: model, value: model })),
-    ],
-    [models]
-  );
-  const handleModelSelect = (item: { label: string; value: string | null }) => {
-    setState((s) => ({ ...s, modelFilter: item.value, page: 0 }));
-    setModelSelectMode(false);
-  };
-
-  const filtered = filterListings(
-    state.listings,
-    state.search,
-    state.cpoOnly,
-    state.modelFilter
-  );
-  const sorted = sortListings(filtered, state.sortKey, state.sortDir);
-  const pageStart = state.page * state.pageSize;
-  const pageEnd = pageStart + state.pageSize;
-  const visible = sorted.slice(pageStart, pageEnd);
-  const totalPages = Math.max(1, Math.ceil(sorted.length / state.pageSize));
-
-  const handleSearchInput = (input: string, key: { return?: boolean; escape?: boolean; backspace?: boolean; delete?: boolean; ctrl?: boolean; meta?: boolean }) => {
+  const handleSearchInput = (
+    input: string,
+    key: { return?: boolean; escape?: boolean; backspace?: boolean; delete?: boolean; ctrl?: boolean; meta?: boolean },
+  ) => {
     if (key.return) {
-      setState((s) => ({ ...s, search: searchInput, page: 0 }));
-      setSearchMode(false);
+      commitSearch(undefined);
       return;
     }
     if (key.escape) {
-      setSearchMode(false);
-      setSearchInput(state.search);
+      cancelSearch(undefined);
       return;
     }
     if (key.backspace || key.delete) {
-      setSearchInput((s) => s.slice(0, -1));
+      deleteSearchChar(undefined);
       return;
     }
     if (input && !key.ctrl && !key.meta) {
-      setSearchInput((s) => s + input);
+      appendSearchChar(input);
     }
   };
 
-  const handleNormalInput = (input: string) => {
-    if (input === "q") {
-      exit();
-      return;
-    }
-    if (input === "f") {
-      setModelSelectMode(true);
-      return;
-    }
-    if (input === "x") {
-      setState((s) => ({ ...s, modelFilter: null, page: 0 }));
-      return;
-    }
-    if (input === "/") {
-      setSearchMode(true);
-      setSearchInput(state.search);
-      return;
-    }
-    const action = inputActions[input];
-    if (action) {
-      setState((s) => action(s, totalPages));
-    }
+  const keymap: Record<string, () => void> = {
+    'q': exit,
+    'f': () => openModelSelect(undefined),
+    'F': () => openYearSelect(undefined),
+    'x': () => { clearModelFilter(undefined); clearYearFilter(undefined); },
+    '/': () => startSearch(undefined),
+    'c': () => clearSearch(undefined),
+    'o': () => toggleCpo(undefined),
+    'r': () => toggleSortDir(undefined),
+    'n': () => nextPage(undefined),
+    'b': () => prevPage(undefined),
+    'p': () => setSortKey('price'),
+    'm': () => setSortKey('miles'),
+    'y': () => setSortKey('year'),
+    'l': () => setSortKey('listed'),
   };
 
-  useInput((input, key) => {
-    if (modelSelectMode) {
-      if (key.escape) {
-        setModelSelectMode(false);
-      }
-      return;
-    }
-    if (searchMode) {
-      handleSearchInput(input, key);
-      return;
-    }
-    handleNormalInput(input);
-  });
+  useInput((input, key) =>
+    Match.value({ modelSelectMode, yearSelectMode, searchMode, input, escape: key.escape }).pipe(
+      Match.when({ modelSelectMode: true, escape: true }, () => closeModelSelect(undefined)),
+      Match.when({ modelSelectMode: true }, () => {}),
+      Match.when({ yearSelectMode: true, escape: true }, () => closeYearSelect(undefined)),
+      Match.when({ yearSelectMode: true }, () => {}),
+      Match.when({ searchMode: true }, () => handleSearchInput(input, key)),
+      Match.orElse(() => keymap[input]?.()),
+    ),
+  );
 
   return (
     <Box flexDirection="column">
+      {loading && (
+        <Box marginBottom={1}>
+          <Text color="green">
+            <Spinner type="dots" />
+          </Text>
+          <Box width={40}>
+            <Text color="yellow"> {loadingStatus}</Text>
+          </Box>
+          <Box width={15}>
+            <Text color="cyan">{String(loadedCount).padStart(5)} loaded</Text>
+          </Box>
+        </Box>
+      )}
       <Header
-        sortKey={state.sortKey}
-        sortDir={state.sortDir}
-        search={state.search}
-        page={state.page}
-        total={sorted.length}
-        pageSize={state.pageSize}
-        cpoOnly={state.cpoOnly}
-        modelFilter={state.modelFilter}
+        sortKey={header.sortKey}
+        sortDir={header.sortDir}
+        search={header.search}
+        page={header.page}
+        total={header.total}
+        pageSize={header.pageSize}
+        cpoOnly={header.cpoOnly}
+        modelFilter={header.modelFilter}
+        yearFilter={view.yearFilter}
       />
       {modelSelectMode && (
         <Box marginBottom={1} flexDirection="column">
           <Text color="yellow">Select model (Enter to apply, Esc to cancel)</Text>
-          <SelectInput items={modelItems} onSelect={handleModelSelect} />
+          <SelectInput
+            items={modelItems}
+            onSelect={(item: { label: string; value: string | null }) => applyModelFilter(item.value)}
+          />
+        </Box>
+      )}
+      {yearSelectMode && (
+        <Box marginBottom={1} flexDirection="column">
+          <Text color="yellow">Select year (Enter to apply, Esc to cancel)</Text>
+          <SelectInput
+            items={yearItems}
+            onSelect={(item: { label: string; value: number | null }) => applyYearFilter(item.value)}
+          />
         </Box>
       )}
       {searchMode && (
@@ -326,14 +341,17 @@ export const App: React.FC<{ initialListings: readonly AutoDevListing[] }> = ({
       )}
       <TableHeader />
       {visible.map((listing, idx) => (
-        <ListingRow key={idx} listing={listing} />
+        <ListingRow key={`${idx}-${listing.vin}`} listing={listing} />
       ))}
       {visible.length === 0 && <Text dimColor>No results</Text>}
     </Box>
   );
 };
 
-export const renderApp = (listings: readonly AutoDevListing[]) =>
-  render(React.createElement(App, { initialListings: listings }), {
-    exitOnCtrlC: true,
-  });
+export const renderApp = (registry: Registry.Registry): Instance =>
+  render(
+    <RegistryContext.Provider value={registry}>
+      <App />
+    </RegistryContext.Provider>,
+    { exitOnCtrlC: true },
+  );

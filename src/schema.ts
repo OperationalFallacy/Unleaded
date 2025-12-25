@@ -1,4 +1,5 @@
 import { Schema as S, String as Str } from "effect";
+import { NormalizedModelName } from "./domain/modelNormalizer.js";
 
 const normalizeText = (value: string): string =>
   Str.capitalize(Str.toLowerCase(value));
@@ -9,16 +10,6 @@ const NormalizedText = S.transform(S.String, S.String, {
   encode: (value) => value,
 });
 
-const NormalizedModel = S.transform(
-  S.Union(S.String, S.Number),
-  NormalizedText,
-  {
-    strict: true,
-    decode: (value) => normalizeText(String(value)),
-    encode: (value) => value,
-  }
-);
-
 export const Location = S.Tuple(S.Number, S.Number);
 
 export const Vehicle = S.Struct({
@@ -26,14 +17,14 @@ export const Vehicle = S.Struct({
   baseMsrp: S.optional(S.Number),
   bodyStyle: S.optional(S.String),
   confidence: S.Number,
-  doors: S.Number,
-  drivetrain: S.String,
+  doors: S.optional(S.Number),
+  drivetrain: S.optional(S.String),
   engine: S.optional(S.String),
   exteriorColor: S.optional(S.String),
   interiorColor: S.optional(S.String),
   fuel: NormalizedText,
   make: NormalizedText,
-  model: NormalizedModel,
+  model: NormalizedModelName,
   seats: S.optional(S.Number),
   series: S.optional(S.String),
   squishVin: S.String,
